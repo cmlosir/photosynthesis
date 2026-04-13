@@ -2,186 +2,236 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photosynthesis Interactive Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Photosynthesis Lab with Data</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .beaker-container {
-            background: #cbd5e1;
+            background: #e2e8f0;
             border-radius: 1rem;
             position: relative;
-            height: 450px;
+            height: 300px;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+            touch-action: none;
         }
+        
+        @media (min-width: 1024px) {
+            .beaker-container { height: 380px; }
+        }
+
         .beaker {
-            width: 180px;
-            height: 250px;
+            width: 120px;
+            height: 170px;
             border: 4px solid #94a3b8;
             border-top: none;
-            border-radius: 0 0 15px 15px;
-            background: rgba(186, 230, 253, 0.6);
+            border-radius: 0 0 20px 20px;
+            background: rgba(186, 230, 253, 0.5);
             position: relative;
             z-index: 5;
+            margin-top: 30px;
         }
+
         .plant-stem {
             position: absolute;
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 6px;
-            height: 180px;
+            width: 5px;
+            height: 120px;
             background: #166534;
-            border-radius: 3px;
         }
+
         .leaf {
             position: absolute;
             background: #22c55e;
             border-radius: 50% 0 50% 0;
-            width: 30px;
-            height: 15px;
+            width: 24px;
+            height: 12px;
         }
+
         .bubble {
             position: absolute;
             background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(255, 255, 255, 1);
+            border: 1px solid white;
             border-radius: 50%;
             pointer-events: none;
-            z-index: 10;
         }
 
-        /* Simplified Light Source Styling */
         .light-source {
             position: absolute;
-            z-index: 20;
-            transition: left 0.5s ease-out;
+            z-index: 10;
             display: flex;
             align-items: center;
+            transition: left 0.3s ease-out;
         }
-        .bulb-core {
-            width: 50px;
-            height: 50px;
-            background: #fde047;
-            border-radius: 50%;
-            position: relative;
-            z-index: 21;
+
+        .lamp-head {
+            width: 40px;
+            height: 30px;
+            background: #334155;
+            border-radius: 4px;
         }
+
         .light-beam {
             position: absolute;
-            height: 200px;
-            background: linear-gradient(90deg, rgba(253, 224, 71, 0.4), transparent);
+            height: 160px;
+            left: 35px;
             pointer-events: none;
-            left: 25px;
-            transform-origin: left center;
+            clip-path: polygon(0 25%, 100% 0, 100% 100%, 0 75%);
+            width: 200px;
+        }
+
+        /* Responsive Chart Container */
+        .chart-wrapper {
+            position: relative;
+            height: 220px;
+            width: 100%;
+            padding: 10px;
+        }
+
+        input[type=range] {
+            height: 28px;
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4">
+<body class="bg-slate-50 min-h-screen text-slate-900 pb-10">
 
-<div class="max-w-5xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="bg-green-600 p-6 text-white">
-            <h1 class="text-2xl font-bold">Photosynthesis Simulation</h1>
-            <p class="opacity-90">Experiment with limiting factors and measure oxygen production.</p>
-        </div>
+<div class="max-w-6xl mx-auto p-3 sm:p-6">
+    <header class="mb-4">
+        <h1 class="text-2xl sm:text-3xl font-black text-green-800">Photosynthesis Lab</h1>
+        <p class="text-[10px] sm:text-xs text-slate-500 uppercase font-bold tracking-widest">Measure Oxygen Production</p>
+    </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
-            <!-- Left: Simulation Display -->
-            <div class="lg:col-span-2 space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Simulation Display -->
+        <div class="lg:col-span-7 space-y-4">
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="flex p-2 gap-1 bg-slate-50 border-b overflow-x-auto">
+                    <button onclick="setWavelength('white')" class="flex-1 min-w-[70px] py-2 bg-white rounded-lg text-[10px] font-bold border border-slate-200 uppercase">White</button>
+                    <button onclick="setWavelength('red')" class="flex-1 min-w-[70px] py-2 bg-red-500 text-white rounded-lg text-[10px] font-bold uppercase">Red</button>
+                    <button onclick="setWavelength('blue')" class="flex-1 min-w-[70px] py-2 bg-blue-500 text-white rounded-lg text-[10px] font-bold uppercase">Blue</button>
+                    <button onclick="setWavelength('green')" class="flex-1 min-w-[70px] py-2 bg-green-500 text-white rounded-lg text-[10px] font-bold uppercase">Green</button>
+                </div>
+
                 <div class="beaker-container">
-                    <!-- Basic Light Source -->
-                    <div id="lamp" class="light-source" style="left: 20px; top: 180px;">
-                        <div id="bulb" class="bulb-core"></div>
-                        <div id="lightBeam" class="light-beam" style="width: 500px;"></div>
+                    <div id="lamp" class="light-source" style="left: 5%; top: 120px;">
+                        <div class="lamp-head"></div>
+                        <div id="lightBeam" class="light-beam"></div>
                     </div>
 
-                    <!-- Beaker Component -->
-                    <div class="beaker" id="beaker">
-                        <div class="plant-stem">
-                            <div class="leaf" style="bottom: 40px; left: -25px; transform: rotate(-20deg);"></div>
-                            <div class="leaf" style="bottom: 60px; right: -25px; transform: rotate(110deg);"></div>
-                            <div class="leaf" style="bottom: 100px; left: -25px; transform: rotate(-20deg);"></div>
-                            <div class="leaf" style="bottom: 120px; right: -25px; transform: rotate(110deg);"></div>
+                    <div class="beaker">
+                        <div id="plant" class="plant-stem">
+                            <div class="leaf" style="bottom: 25px; left: -18px; transform: rotate(-20deg);"></div>
+                            <div class="leaf" style="bottom: 50px; right: -18px; transform: rotate(110deg);"></div>
+                            <div class="leaf" style="bottom: 75px; left: -18px; transform: rotate(-20deg);"></div>
                         </div>
                         <div id="bubbleZone" class="absolute inset-0"></div>
                     </div>
                 </div>
 
-                <div class="bg-slate-100 p-4 rounded-xl">
-                    <canvas id="rateChart" height="120"></canvas>
+                <!-- Labeled Graph Area -->
+                <div class="bg-white border-t p-2">
+                    <div class="chart-wrapper">
+                        <canvas id="rateChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="lg:col-span-5 space-y-4">
+            <div class="bg-white rounded-2xl shadow-lg p-5 border border-slate-200 space-y-6">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-green-50 rounded-xl p-3 border border-green-100 text-center">
+                        <span class="block text-[10px] uppercase font-bold text-green-600">Rate (BPM)</span>
+                        <span id="rateDisplay" class="text-3xl font-black text-green-900">0</span>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 flex flex-col justify-center">
+                        <span class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Limiting Factor</span>
+                        <span id="limitMsg" class="text-[11px] font-bold text-slate-800 leading-tight">Light</span>
+                    </div>
+                </div>
+
+                <!-- Sliders -->
+                <div class="space-y-5">
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-slate-500">LIGHT INTENSITY</span>
+                            <span id="lightVal" class="text-green-600">50%</span>
+                        </div>
+                        <input type="range" id="lightInput" value="50" class="accent-green-600 cursor-pointer">
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-slate-500">CO₂ CONCENTRATION</span>
+                            <span id="co2Val" class="text-green-600">400ppm</span>
+                        </div>
+                        <input type="range" id="co2Input" value="40" class="accent-green-600 cursor-pointer">
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-slate-500">TEMPERATURE</span>
+                            <span id="tempVal" class="text-green-600">20°C</span>
+                        </div>
+                        <input type="range" id="tempInput" min="0" max="50" value="20" class="accent-green-600 cursor-pointer">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="recordData()" class="bg-slate-900 text-white py-4 rounded-xl font-bold text-sm active:scale-95 transition shadow-lg">Record Data</button>
+                    <button onclick="resetLab()" class="bg-slate-100 text-slate-600 py-4 rounded-xl font-bold text-sm active:scale-95 transition">Reset Lab</button>
                 </div>
             </div>
 
-            <!-- Right: Controls -->
-            <div class="space-y-4">
-                <div class="p-4 bg-white border border-slate-200 rounded-xl space-y-6">
-                    <h3 class="font-bold text-slate-800 border-b pb-2">Environment Controls</h3>
-                    
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-600">Light Intensity</span>
-                            <span id="lightVal" class="font-bold text-green-600">50%</span>
-                        </div>
-                        <input type="range" id="lightInput" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600" value="50">
-                    </div>
-
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-600">CO₂ Concentration</span>
-                            <span id="co2Val" class="font-bold text-green-600">Low</span>
-                        </div>
-                        <input type="range" id="co2Input" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600" value="20">
-                    </div>
-
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-600">Water Availability</span>
-                            <span id="waterVal" class="font-bold text-green-600">Optimal</span>
-                        </div>
-                        <input type="range" id="waterInput" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600" value="100">
-                    </div>
-                </div>
-
-                <div class="p-5 bg-green-50 rounded-xl border border-green-200">
-                    <div class="text-sm space-y-3">
-                        <div class="flex justify-between">
-                            <span>Photosynthetic Rate:</span>
-                            <span class="font-bold"><span id="rateDisplay">0</span> bubbles/min</span>
-                        </div>
-                        <div class="pt-2 border-t border-green-200">
-                            <span class="text-xs uppercase font-bold text-green-700">Limiting Factor:</span>
-                            <p id="limitMsg" class="font-medium text-green-900 mt-1">Light Intensity</p>
-                        </div>
-                    </div>
-                    <button id="resetBtn" class="w-full mt-4 bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700 transition">Reset Experiment</button>
-                </div>
+            <!-- Table -->
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <table class="w-full text-left text-[11px]">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-400 uppercase font-black">
+                            <th class="p-3">Light</th>
+                            <th class="p-3">CO₂</th>
+                            <th class="p-3 text-right">Bubbles/min</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataLogBody" class="divide-y divide-slate-100"></tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const lightInput = document.getElementById('lightInput');
-    const co2Input = document.getElementById('co2Input');
-    const waterInput = document.getElementById('waterInput');
-    const lightVal = document.getElementById('lightVal');
-    const co2Val = document.getElementById('co2Val');
-    const waterVal = document.getElementById('waterVal');
-    const rateDisplay = document.getElementById('rateDisplay');
-    const limitMsg = document.getElementById('limitMsg');
-    const bubbleZone = document.getElementById('bubbleZone');
-    const lamp = document.getElementById('lamp');
-    const lightBeam = document.getElementById('lightBeam');
-    const bulb = document.getElementById('bulb');
-    const resetBtn = document.getElementById('resetBtn');
-
-    let rate = 0;
     let chart;
-    let bubbleTimer = 0;
+    let wavelength = 'white';
+    let frameCount = 0;
+
+    const inputs = {
+        light: document.getElementById('lightInput'),
+        co2: document.getElementById('co2Input'),
+        temp: document.getElementById('tempInput')
+    };
+
+    const displays = {
+        light: document.getElementById('lightVal'),
+        co2: document.getElementById('co2Val'),
+        temp: document.getElementById('tempVal'),
+        rate: document.getElementById('rateDisplay'),
+        limit: document.getElementById('limitMsg'),
+        beam: document.getElementById('lightBeam'),
+        lamp: document.getElementById('lamp')
+    };
 
     function initChart() {
         const ctx = document.getElementById('rateChart').getContext('2d');
@@ -190,106 +240,159 @@
             data: {
                 labels: Array(20).fill(''),
                 datasets: [{
-                    label: 'Oxygen Production Rate',
+                    label: 'Oxygen Rate',
                     data: Array(20).fill(0),
                     borderColor: '#16a34a',
                     backgroundColor: 'rgba(22, 163, 74, 0.1)',
                     fill: true,
-                    tension: 0.4
+                    tension: 0.4,
+                    pointRadius: 2,
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
-                animation: false,
-                scales: { y: { beginAtZero: true, max: 60 } }
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Rate (Bubbles/min)',
+                            font: { size: 10, weight: 'bold' },
+                            color: '#64748b'
+                        },
+                        ticks: { font: { size: 9 } }
+                    },
+                    x: { 
+                        title: {
+                            display: true,
+                            text: 'Time (Live Timeline)',
+                            font: { size: 10, weight: 'bold' },
+                            color: '#64748b'
+                        },
+                        ticks: { display: false }
+                    }
+                }
             }
         });
     }
 
-    function updateSim() {
-        const L = parseInt(lightInput.value) / 100;
-        const C = parseInt(co2Input.value) / 100;
-        const W = parseInt(waterInput.value) / 100;
+    function setWavelength(color) {
+        wavelength = color;
+        const colors = {
+            white: 'rgba(255, 255, 255, 0.4)',
+            red: 'rgba(239, 68, 68, 0.4)',
+            blue: 'rgba(59, 130, 246, 0.4)',
+            green: 'rgba(34, 197, 94, 0.4)'
+        };
+        displays.beam.style.background = `linear-gradient(90deg, ${colors[color]}, transparent)`;
+    }
 
-        const minVal = Math.min(L, C, W);
-        rate = Math.round(minVal * 50);
+    function calculateRate() {
+        const L = parseInt(inputs.light.value) / 100;
+        const C = parseInt(inputs.co2.value) / 100;
+        const T = parseInt(inputs.temp.value);
 
-        lightVal.innerText = `${lightInput.value}%`;
-        co2Val.innerText = C < 0.2 ? 'Critical' : (C < 0.5 ? 'Moderate' : 'High');
-        waterVal.innerText = W < 0.3 ? 'Wilting' : (W < 0.7 ? 'Moderate' : 'Optimal');
-        rateDisplay.innerText = rate;
+        let waveMult = (wavelength === 'green') ? 0.15 : (wavelength === 'white') ? 1.0 : 0.85;
+        const lightFactor = L * waveMult;
+        const co2Factor = C;
+        const tempFactor = Math.max(0, -0.0015 * Math.pow(T - 30, 2) + 1);
 
-        if (minVal === L) limitMsg.innerText = "Light Intensity (Lamp distance)";
-        else if (minVal === C) limitMsg.innerText = "CO₂ Concentration";
-        else limitMsg.innerText = "Water Availability";
+        const rate = Math.min(lightFactor, co2Factor, tempFactor) * 100;
 
-        // Move the lamp assembly
-        lamp.style.left = `${(1.0 - L) * 200 + 10}px`;
-        
-        // Update light appearance
-        lightBeam.style.opacity = L;
-        bulb.style.opacity = 0.3 + (L * 0.7);
-        bulb.style.boxShadow = `0 0 ${L * 60}px #fde047`;
+        let limit = "Light Intensity";
+        if (co2Factor < lightFactor && co2Factor < tempFactor) limit = "CO₂ Concentration";
+        if (tempFactor < lightFactor && tempFactor < co2Factor) limit = "Temperature";
+        if (wavelength === 'green') limit = "Wavelength (Green Reflection)";
+
+        return { rate: Math.round(rate), limit };
+    }
+
+    function updateVisuals(rate) {
+        const L = parseInt(inputs.light.value);
+        const lampPos = 5 + ((100 - L) * 0.4);
+        displays.lamp.style.left = `${lampPos}%`;
+        displays.beam.style.width = `${(L/100) * 150 + 100}px`;
+        displays.beam.style.opacity = (L / 100) + 0.1;
+
+        displays.light.innerText = L + '%';
+        displays.co2.innerText = (inputs.co2.value * 10) + ' ppm';
+        displays.temp.innerText = inputs.temp.value + '°C';
     }
 
     function createBubble() {
         const b = document.createElement('div');
         b.className = 'bubble';
-        const size = Math.random() * 6 + 4;
+        const size = Math.random() * 4 + 3;
         b.style.width = size + 'px';
         b.style.height = size + 'px';
-        b.style.left = '90px';
+        b.style.left = '50%';
         b.style.bottom = '40px';
-        bubbleZone.appendChild(b);
+        document.getElementById('bubbleZone').appendChild(b);
 
         let pos = 40;
-        let side = 90;
-        const drift = (Math.random() - 0.5) * 0.8;
-        const interval = setInterval(() => {
+        const drift = (Math.random() - 0.5) * 15;
+        
+        const anim = setInterval(() => {
             pos += 2;
-            side += drift;
             b.style.bottom = pos + 'px';
-            b.style.left = side + 'px';
-            if (pos > 240) {
-                clearInterval(interval);
+            b.style.transform = `translateX(${drift}px)`;
+            if (pos > 150) {
+                clearInterval(anim);
                 b.remove();
             }
         }, 30);
     }
 
+    function recordData() {
+        const { rate } = calculateRate();
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="p-3 font-bold">${inputs.light.value}%</td>
+            <td class="p-3 text-slate-500">${inputs.co2.value * 10}</td>
+            <td class="p-3 text-right text-green-600 font-black">${rate}</td>
+        `;
+        const body = document.getElementById('dataLogBody');
+        body.prepend(row);
+    }
+
+    function resetLab() {
+        inputs.light.value = 50;
+        inputs.co2.value = 40;
+        inputs.temp.value = 20;
+        setWavelength('white');
+        document.getElementById('dataLogBody').innerHTML = '';
+    }
+
     function loop() {
-        updateSim();
-        
-        if (rate > 0) {
-            bubbleTimer++;
-            const spawnThreshold = Math.floor(200 / (rate + 1));
-            if (bubbleTimer >= spawnThreshold) {
-                createBubble();
-                bubbleTimer = 0;
-            }
+        const { rate, limit } = calculateRate();
+        displays.rate.innerText = rate;
+        displays.limit.innerText = limit;
+        updateVisuals(rate);
+
+        if (rate > 5 && frameCount % Math.floor(120 / (rate/5 + 1)) === 0) {
+            createBubble();
         }
 
-        if (Date.now() % 1000 < 20) {
+        if (frameCount % 60 === 0) {
             chart.data.datasets[0].data.push(rate);
             chart.data.datasets[0].data.shift();
-            chart.update();
+            chart.update('none');
         }
 
+        frameCount++;
         requestAnimationFrame(loop);
     }
 
-    resetBtn.addEventListener('click', () => {
-        lightInput.value = 50;
-        co2Input.value = 20;
-        waterInput.value = 100;
-        chart.data.datasets[0].data = Array(20).fill(0);
-        chart.update();
-    });
-
     window.onload = () => {
         initChart();
+        setWavelength('white');
         loop();
-
     };
 </script>
 </body>
